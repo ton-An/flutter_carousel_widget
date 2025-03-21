@@ -13,6 +13,7 @@ class ExpandableCarouselOptions extends BaseCarouselOptions {
   ExpandableCarouselOptions({
     this.controller,
     this.estimatedPageSize,
+    this.expansionAlignment = Alignment.topCenter,
     double? aspectRatio,
     double viewportFraction = 0.8,
     int initialPage = 0,
@@ -91,10 +92,13 @@ class ExpandableCarouselOptions extends BaseCarouselOptions {
   /// A [MapController], used to control the map.
   final ExpandableCarouselController? controller;
 
+  final Alignment expansionAlignment;
+
   /// Copy With Constructor
   ExpandableCarouselOptions copyWith({
     ExpandableCarouselController? controller,
     double? estimatedPageSize,
+    Alignment? expansionAlignment,
     double? aspectRatio,
     double? viewportFraction,
     int? initialPage,
@@ -132,6 +136,7 @@ class ExpandableCarouselOptions extends BaseCarouselOptions {
     return ExpandableCarouselOptions(
       controller: controller ?? this.controller,
       aspectRatio: aspectRatio ?? this.aspectRatio,
+      expansionAlignment: expansionAlignment ?? this.expansionAlignment,
       viewportFraction: viewportFraction ?? this.viewportFraction,
       initialPage: initialPage ?? this.initialPage,
       enableInfiniteScroll: enableInfiniteScroll ?? this.enableInfiniteScroll,

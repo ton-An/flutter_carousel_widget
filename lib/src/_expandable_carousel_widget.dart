@@ -556,7 +556,7 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
               () => _sizes[index] =
                   _isHorizontalScroll ? size.height : size.width,
             ),
-            alignment: Alignment.topCenter,
+            alignment: widget.options.expansionAlignment,
             scrollDirection: widget.options.scrollDirection,
             child: widget.items != null
                 ? widget.items!.isNotEmpty
@@ -608,6 +608,11 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
               width: !_isHorizontalScroll ? value : null,
               child: child,
             ),
+            onEnd: () {
+              if (!_firstPageLoaded) {
+                _firstPageLoaded = true;
+              }
+            },
             child: Stack(children: [
               _buildCarouselWidget(context),
               Positioned(
@@ -632,6 +637,11 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
             width: !_isHorizontalScroll ? value : null,
             child: child,
           ),
+          onEnd: () {
+            if (!_firstPageLoaded) {
+              _firstPageLoaded = true;
+            }
+          },
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.end,
@@ -660,6 +670,11 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
           width: !_isHorizontalScroll ? value : null,
           child: child,
         ),
+        onEnd: () {
+          if (!_firstPageLoaded) {
+            _firstPageLoaded = true;
+          }
+        },
         child: _buildCarouselWidget(context),
       ),
     );
