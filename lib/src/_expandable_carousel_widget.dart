@@ -84,6 +84,9 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
   /// Current page index (used for indicator sync too)
   int _previousPage = 0;
 
+  /// Previous page index
+  double _previousPageIndex = 0;
+
   /// Flag for the first page load
   bool _firstPageLoaded = false;
 
@@ -129,8 +132,9 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
     _pageController = _createPageController(); // Create page controller
     _carouselState!.pageController = _pageController; // Set page controller
 
-    _pageController!
-        .addListener(_changeIndexPageDelta); // Listen for page changes
+    _pageController!.addListener(
+      _changeIndexPageDelta,
+    ); // Listen for page changes
 
     // Initialize auto-play
     _handleAutoPlay();
@@ -149,8 +153,9 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
     _carouselState!.pageController = _pageController; // Update page controller
     _shouldDisposePageController = widget.options.controller == null;
 
-    _pageController
-        ?.addListener(_changeIndexPageDelta); // Listen for page changes
+    _pageController?.addListener(
+      _changeIndexPageDelta,
+    ); // Listen for page changes
 
     if (_shouldReinitializeHeights(oldWidget)) {
       _reinitializeSizes(); // Reinitialize item sizes if needed
@@ -166,8 +171,9 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
   @override
   void dispose() {
     _clearTimer(); // Clear the auto-play timer
-    _pageController
-        ?.removeListener(_changeIndexPageDelta); // Remove page change listener
+    _pageController?.removeListener(
+      _changeIndexPageDelta,
+    ); // Remove page change listener
     if (_shouldDisposePageController) {
       _pageController?.dispose(); // Dispose of the page controller if needed
     }
@@ -217,10 +223,18 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
       // Get current page index
       var pageIndex =
           _carouselState!.pageController!.page ?? _currentPage.toDouble();
+      int adjustedPageIndex = _currentPage;
+
+      // Ensures that the page transitions happens when the scroll starts
+      if (pageIndex > _previousPageIndex) {
+        adjustedPageIndex = pageIndex.ceil();
+      } else if (pageIndex < _previousPageIndex) {
+        adjustedPageIndex = pageIndex.floor();
+      }
 
       // Calculate the actual index in case of infinite scrolling
       var actualIndex = getRealIndex(
-        pageIndex.floor() + _carouselState!.initialPage, // Floor the page index
+        adjustedPageIndex + _carouselState!.initialPage, // Floor the page index
         _carouselState!.realPage, // Initial real page
         widget.itemCount!, // Total number of items
       );
@@ -232,6 +246,7 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
             _firstPageLoaded = true; // Set first page loaded flag
             _previousPage = _currentPage; // Update previous page
             _currentPage = actualIndex; // Update current page
+            _previousPageIndex = pageIndex; // Update previous page index
             _pageDelta = pageIndex - pageIndex.floor(); // Calculate delta
           });
         }
@@ -317,7 +332,9 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
   List<double> _prepareSizes() {
     return isBuilder
         ? List.filled(
-            widget.itemCount!, widget.options.estimatedPageSize ?? 0.0)
+            widget.itemCount!,
+            widget.options.estimatedPageSize ?? 0.0,
+          )
         : widget.items!
             .map((_) => widget.options.estimatedPageSize ?? 0.0)
             .toList();
@@ -343,8 +360,10 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
       _changeMode(CarouselPageChangedReason.timed);
       widget.options.onPageChanged?.call(_currentPage, previousReason);
 
-      _previousPage = (_currentPage + differenceFromPreviousToCurrent)
-          .clamp(0, _sizes.length - 1);
+      _previousPage = (_currentPage + differenceFromPreviousToCurrent).clamp(
+        0,
+        _sizes.length - 1,
+      );
     }
 
     _previousPage = _previousPage.clamp(0, _sizes.length - 1);
@@ -368,24 +387,20 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
   }
 
   /// Wrap the carousel item with the enlarge strategy (optional)
-  Widget _getEnlargeWrapper(Widget? child,
-      {double? width, double? height, double? scale}) {
+  Widget _getEnlargeWrapper(
+    Widget? child, {
+    double? width,
+    double? height,
+    double? scale,
+  }) {
     // If `enlargeStrategy` is `CenterPageEnlargeStrategy.height`
     if (widget.options.enlargeStrategy == CenterPageEnlargeStrategy.height) {
-      return SizedBox(
-        width: width,
-        height: height,
-        child: child,
-      );
+      return SizedBox(width: width, height: height, child: child);
     }
 
     return Transform.scale(
       scale: scale,
-      child: SizedBox(
-        width: width,
-        height: height,
-        child: child,
-      ),
+      child: SizedBox(width: width, height: height, child: child),
     );
   }
 
@@ -401,16 +416,18 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
             instance
               ..onStart = (_) {
                 _clearTimer(); // Pause auto-play when user interacts
-                _changeMode(CarouselPageChangedReason
-                    .manual); // Change the page change reason mode
+                _changeMode(
+                  CarouselPageChangedReason.manual,
+                ); // Change the page change reason mode
               }
               ..onDown = (_) {
                 if (widget.options.pauseAutoPlayOnTouch) {
                   _clearTimer(); // Pause auto-play when user interacts
                 }
 
-                _changeMode(CarouselPageChangedReason
-                    .manual); // Change the page change reason mode
+                _changeMode(
+                  CarouselPageChangedReason.manual,
+                ); // Change the page change reason mode
               }
               ..onCancel = () {
                 if (widget.options.pauseAutoPlayOnTouch) {
@@ -522,8 +539,9 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
                   1 - (itemOffset.abs() * widget.options.enlargeFactor!);
 
               // Transform the distortion value for smooth enlargement
-              distortionValue =
-                  Curves.easeOut.transform(distortionRatio.clamp(0.0, 1.0));
+              distortionValue = Curves.easeOut.transform(
+                distortionRatio.clamp(0.0, 1.0),
+              );
             }
 
             // Calculate the dimension
@@ -582,11 +600,9 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
       );
     }
 
-    return CircularSlideIndicator(key: _defaultIndicatorKey).build(
-      _currentPage,
-      _pageDelta,
-      widget.itemCount!,
-    );
+    return CircularSlideIndicator(
+      key: _defaultIndicatorKey,
+    ).build(_currentPage, _pageDelta, widget.itemCount!);
   }
 
   /// Build the main carousel widget structure
@@ -613,15 +629,17 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
                 _firstPageLoaded = true;
               }
             },
-            child: Stack(children: [
-              _buildCarouselWidget(context),
-              Positioned(
-                bottom: 8.0,
-                left: 0.0,
-                right: 0.0,
-                child: _buildSlideIndicator(),
-              ),
-            ]),
+            child: Stack(
+              children: [
+                _buildCarouselWidget(context),
+                Positioned(
+                  bottom: 8.0,
+                  left: 0.0,
+                  right: 0.0,
+                  child: _buildSlideIndicator(),
+                ),
+              ],
+            ),
           ),
         );
       }
@@ -649,10 +667,7 @@ class _ExpandableCarouselWidgetState extends State<ExpandableCarousel>
             children: [
               Expanded(child: _buildCarouselWidget(context)),
               const SizedBox(height: 8.0),
-              Expanded(
-                flex: 0,
-                child: _buildSlideIndicator(),
-              ),
+              Expanded(flex: 0, child: _buildSlideIndicator()),
             ],
           ),
         ),
